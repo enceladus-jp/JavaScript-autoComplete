@@ -183,6 +183,30 @@ var autoComplete = (function(){
                 }
             };
             addEvent(that, 'keyup', that.keyupHandler);
+            that.composeEndHandler = function(e) {
+                var val = that.value;
+                if (val.length >= o.minChars) {
+                    if (val != that.last_val) {
+                        that.last_val = val;
+                        clearTimeout(that.timer);
+                        if (o.cache) {
+                            if (val in that.cache) { suggest(that.cache[val]); return; }
+                            // no requests if previous suggestions were empty
+                            for (var i=1; i<val.length-o.minChars; i++) {
+                                var part = val.slice(0, val.length-i);
+                                if (part in that.cache && !that.cache[part].length) { suggest([]); return; }
+                            }
+                        }
+                        that.timer = setTimeout(function(){ o.source(val, suggest) }, o.delay);
+                    }
+                } else {
+                    that.last_val = val;
+                    that.sc.style.display = 'none';
+                }
+            } ;
+            if ((navigator.userAgent.indexOf("iPhone") >= 0) || (navigator.userAgent.indexOf("iPad") >= 0)) {
+                addEvent(that, 'compositionend', that.composeEndHandler);
+            }
 
             that.focusHandler = function(e){
                 that.last_val = '\n';
